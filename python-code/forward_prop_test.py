@@ -101,6 +101,32 @@ def test_backprop():
     plt.savefig('cost-reduction-mine.png')
 
 
+def test_xor_backprop():
+    X = np.array(([1, 1], [0, 1], [1, 0], [0,0]), dtype=float)
+    y = np.array(([0], [1], [1], [0]), dtype=float)
+
+    nn = NeuralNetwork(X.shape[1])
+
+    #X = X / np.amax(X, axis=0)
+    #y = y / 1
+    costs = []
+    for i in range(0, 10000):
+        dJdw1, dJdw2 = nn.cost_prime_function(X, y)
+        nn.apply_changes(dJdw1, dJdw2)
+        costs.append(nn.cost_function(X, y))
+
+    print("Predict: ")
+    print(nn.forwardPropagation(X))
+    print("y: ")
+    print(y)
+
+    plt.plot(costs)
+    plt.grid(1)
+    plt.xlabel("Iterations")
+    plt.ylabel("Cost")
+    plt.savefig('cost-reduction-xor.png')
+
+
 def compute_numerical_gradients(nn, x, y):
     params = nn.getParams()
     nrgrad = np.zeros(params.shape)
@@ -124,3 +150,5 @@ if __name__ == '__main__':
     test_opt()
     print("==== My backprop test: ")
     test_backprop()
+    print("==== XOR backprop test: ")
+    test_xor_backprop()
