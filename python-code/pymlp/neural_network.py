@@ -48,7 +48,7 @@ class NeuralNetwork(object):
     def __init__(self, feature_no,
                  hidden_layer_neurons=3,
                  output_layer_size=1,
-                 alpha=1):
+                 alpha=3):
         """
         Create a neural network with a few params avaiable.
 

@@ -26,10 +26,10 @@ def test_error_func():
 
 
 def test_gradient_desc_numerical():
-    X = np.array(([3,5], [5,1], [10,2]), dtype=float)
+    X = np.array(([3, 5], [5, 1], [10, 2]), dtype=float)
     y = np.array(([75], [82], [93]), dtype=float)
 
-    X = X/np.amax(X, axis=0)
+    X = X / np.amax(X, axis=0)
     y = y / 100.0
 
     nn = NeuralNetwork(X.shape[1])
@@ -53,10 +53,10 @@ def test_gradient_desc_numerical():
 
 
 def test_opt():
-    X = np.array(([3,5], [5,1], [10,2]), dtype=float)
+    X = np.array(([3, 5], [5, 1], [10, 2]), dtype=float)
     y = np.array(([75], [82], [93]), dtype=float)
 
-    X = X/np.amax(X, axis=0)
+    X = X / np.amax(X, axis=0)
     y = y / 100.0
 
     nn = NeuralNetwork(X.shape[1])
@@ -70,20 +70,21 @@ def test_opt():
 
     print("X prediction: ")
     print(nn.forwardPropagation(X))
-    
+
     print("y: ")
     print(y)
 
+
 def test_backprop():
-    X = np.array(([3,5], [5,1], [10,2]), dtype=float)
+    X = np.array(([3, 5], [5, 1], [10, 2]), dtype=float)
     y = np.array(([75], [82], [93]), dtype=float)
 
     nn = NeuralNetwork(X.shape[1])
 
-    X = X/np.amax(X, axis=0)
+    X = X / np.amax(X, axis=0)
     y = y / 100.0
     costs = []
-    for i in range(0, 1500):
+    for i in range(0, 10000):
         dJdw1, dJdw2 = nn.cost_prime_function(X, y)
         nn.apply_changes(dJdw1, dJdw2)
         costs.append(nn.cost_function(X, y))
@@ -92,14 +93,12 @@ def test_backprop():
     print(nn.forwardPropagation(X))
     print("y: ")
     print(y)
-    
+
     plt.plot(costs)
     plt.grid(1)
     plt.xlabel("Iterations")
     plt.ylabel("Cost")
     plt.savefig('cost-reduction-mine.png')
-
-    
 
 
 def compute_numerical_gradients(nn, x, y):
