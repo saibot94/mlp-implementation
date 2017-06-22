@@ -14,7 +14,7 @@ class NeuralNetwork(object):
     def __init__(self, feature_no,
                  hidden_layer_neurons=3,
                  output_layer_size=1,
-                 alpha=1):
+                 alpha=0.02):
         """
         Create a neural network with a few params avaiable.
 
@@ -57,12 +57,13 @@ class NeuralNetwork(object):
 
         delta2 = np.dot(delta3, self.w2.T) * sigmoid_derivative(self.z2)
         dJdw1 = np.dot(x.T, delta2)
-
+        print("dj1: " + str(dJdw1))
+        print("dj2: " + str(dJdw2))
         return dJdw1, dJdw2
 
     def apply_changes(self, dJdw1, dJdw2):
-        self.w1 = self.w1 - self.alpha * dJdw1
-        self.w2 = self.w2 - self.alpha * dJdw2
+        self.w1 = self.w1 - (self.alpha * dJdw1)
+        self.w2 = self.w2 - (self.alpha * dJdw2)
 
     def cost_function(self, x, y):
         """

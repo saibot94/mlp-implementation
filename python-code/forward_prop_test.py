@@ -17,8 +17,8 @@ def test_forward_prop():
 
 
 def test_error_func():
-    y = np.array(([1,2,3,4]), dtype=float)
-    yhat = np.array(([1,1,2,4]), dtype=float)
+    y = np.array(([1, 2, 3, 4]), dtype=float)
+    yhat = np.array(([1, 1, 2, 4]), dtype=float)
 
     nn = NeuralNetwork(y.shape[0])
 
@@ -28,6 +28,7 @@ def test_gradient_desc_numerical():
     y = np.array(([75], [82], [93]), dtype=float)
 
     nn = NeuralNetwork(X.shape[1])
+
     def f(x):
         return x**2
 
@@ -42,10 +43,24 @@ def test_gradient_desc_numerical():
     print("Numerical gradients:")
     print(str(numericGradient))
 
-    assert (norm(nngradients - numericGradient) / norm(nngradients + numericGradient)) < 0.00000001
+    assert (norm(nngradients - numericGradient) /
+            norm(nngradients + numericGradient)) < 0.00000001
 
-    
 
+def test_backprop():
+    X = np.array(([3,5], [5,1], [10,2], [6,1.5]), dtype=float)
+    y = np.array(([75], [82], [93], [70]), dtype=float)
+    nn = NeuralNetwork(X.shape[1])
+
+    for i in range(0, 1500):
+        dJdw1, dJdw2 = nn.cost_prime_function(X, y)
+
+        print("Cost at step " + str(i))
+        print(nn.cost_function(X, y))
+        nn.apply_changes(dJdw1, dJdw2)
+
+        print("Predict: ")
+        print(nn.yhat)
 
 
 def compute_numerical_gradients(nn, x, y):
@@ -58,10 +73,9 @@ def compute_numerical_gradients(nn, x, y):
         nn.setParams(params + perturb)
         loss2 = nn.cost_function(x, y)
 
-
         nn.setParams(params - perturb)
         loss1 = nn.cost_function(x, y)
-        nrgrad[p] = (loss2 - loss1) / (2*e)
+        nrgrad[p] = (loss2 - loss1) / (2 * e)
         perturb[p] = 0
     nn.setParams(params)
 
@@ -69,8 +83,4 @@ def compute_numerical_gradients(nn, x, y):
 
 
 if __name__ == '__main__':
-    print("=========== Forward propagation test")
-    test_forward_prop()
-    print("=========== Error (Cost) func test")
-    test_error_func()
-    numerically_test_gradient_desc()
+    test_backprop()
