@@ -1,6 +1,8 @@
-from pymlp.neural_network import NeuralNetwork
+from pymlp.neural_network import NeuralNetwork, Trainer
 import numpy as np
 from numpy.linalg import norm
+import matplotlib.pyplot as plt
+
 
 def test_forward_prop():
     X = np.array(([3, 5], [5, 1], [10, 2]), dtype=float)
@@ -24,8 +26,11 @@ def test_error_func():
 
 
 def test_gradient_desc_numerical():
-    X = np.array(([3, 5], [5, 1], [10, 2]), dtype=float)
+    X = np.array(([3,5], [5,1], [10,2]), dtype=float)
     y = np.array(([75], [82], [93]), dtype=float)
+
+    X = X/np.amax(X, axis=0)
+    y = y / 100.0
 
     nn = NeuralNetwork(X.shape[1])
 
@@ -47,20 +52,54 @@ def test_gradient_desc_numerical():
             norm(nngradients + numericGradient)) < 0.00000001
 
 
+def test_opt():
+    X = np.array(([3,5], [5,1], [10,2]), dtype=float)
+    y = np.array(([75], [82], [93]), dtype=float)
+
+    X = X/np.amax(X, axis=0)
+    y = y / 100.0
+
+    nn = NeuralNetwork(X.shape[1])
+    t = Trainer(nn)
+    t.train(X, y)
+    plt.plot(t.J)
+    plt.grid(1)
+    plt.xlabel("Iterations")
+    plt.ylabel("Cost")
+    plt.savefig('cost-reduction.png')
+
+    print("X prediction: ")
+    print(nn.forwardPropagation(X))
+    
+    print("y: ")
+    print(y)
+
 def test_backprop():
-    X = np.array(([3,5], [5,1], [10,2], [6,1.5]), dtype=float)
-    y = np.array(([75], [82], [93], [70]), dtype=float)
+    X = np.array(([3,5], [5,1], [10,2]), dtype=float)
+    y = np.array(([75], [82], [93]), dtype=float)
+
     nn = NeuralNetwork(X.shape[1])
 
+    X = X/np.amax(X, axis=0)
+    y = y / 100.0
+    costs = []
     for i in range(0, 1500):
         dJdw1, dJdw2 = nn.cost_prime_function(X, y)
-
-        print("Cost at step " + str(i))
-        print(nn.cost_function(X, y))
         nn.apply_changes(dJdw1, dJdw2)
+        costs.append(nn.cost_function(X, y))
 
-        print("Predict: ")
-        print(nn.yhat)
+    print("Predict: ")
+    print(nn.forwardPropagation(X))
+    print("y: ")
+    print(y)
+    
+    plt.plot(costs)
+    plt.grid(1)
+    plt.xlabel("Iterations")
+    plt.ylabel("Cost")
+    plt.savefig('cost-reduction-mine.png')
+
+    
 
 
 def compute_numerical_gradients(nn, x, y):
@@ -83,4 +122,6 @@ def compute_numerical_gradients(nn, x, y):
 
 
 if __name__ == '__main__':
+    test_opt()
+    print("==== My backprop test: ")
     test_backprop()
