@@ -32,7 +32,8 @@ class SequentialNeuralNet(inputLayerSize: Int,
   def isRegressionNet: Boolean = outputLayerSize == 1
 
   /**
-    * Computes the forward propagation based on the current weights
+    * Computes the forward propagation based on the current weights. Once the network is trained, this function is used to
+    * classify future instances of objects.
     *
     * @param x matrix of inputs that needs forward propagation through the network
     */
