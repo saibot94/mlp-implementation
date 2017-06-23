@@ -48,7 +48,7 @@ class NeuralNetwork(object):
     def __init__(self, feature_no,
                  hidden_layer_neurons=3,
                  output_layer_size=1,
-                 alpha=3):
+                 alpha=1):
         """
         Create a neural network with a few params avaiable.
 
@@ -116,8 +116,6 @@ class NeuralNetwork(object):
 
     def compute_gradients(self, x, y):
         dJdw1, dJdw2 = self.cost_prime_function(x, y)
-        print("dj1: " + str(dJdw1))
-        print("dj2: " + str(dJdw2))
         return np.concatenate((dJdw1.ravel(), dJdw2.ravel()))
 
     # Helper Functions for interacting with other classes:

@@ -62,6 +62,8 @@ def test_opt():
     nn = NeuralNetwork(X.shape[1])
     t = Trainer(nn)
     t.train(X, y)
+
+    plt.close()
     plt.plot(t.J)
     plt.grid(1)
     plt.xlabel("Iterations")
@@ -87,13 +89,17 @@ def test_backprop():
     for i in range(0, 10000):
         dJdw1, dJdw2 = nn.cost_prime_function(X, y)
         nn.apply_changes(dJdw1, dJdw2)
-        costs.append(nn.cost_function(X, y))
+        cost = nn.cost_function(X, y)
+        costs.append(cost)
+        if cost <= 0.0001:
+            break
 
     print("Predict: ")
     print(nn.forwardPropagation(X))
     print("y: ")
     print(y)
 
+    plt.close()
     plt.plot(costs)
     plt.grid(1)
     plt.xlabel("Iterations")
@@ -113,13 +119,17 @@ def test_xor_backprop():
     for i in range(0, 10000):
         dJdw1, dJdw2 = nn.cost_prime_function(X, y)
         nn.apply_changes(dJdw1, dJdw2)
-        costs.append(nn.cost_function(X, y))
+        cost = nn.cost_function(X, y)
+        costs.append(cost)
+        if cost <= 0.001 or (len(costs) > 1 and abs(costs[-1] - cost) < 0.0000000001 and cost < 0.001):
+            break
 
     print("Predict: ")
     print(nn.forwardPropagation(X))
     print("y: ")
     print(y)
 
+    plt.close()
     plt.plot(costs)
     plt.grid(1)
     plt.xlabel("Iterations")
