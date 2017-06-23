@@ -20,9 +20,9 @@ class SequentialNeuralNet(inputLayerSize: Int, hiddenLayerSize: Int = 3, outputL
     */
   val w2: DenseMatrix[Double] = DenseMatrix.rand(hiddenLayerSize, outputLayerSize, Rand.gaussian)
 
-  var z2: DenseMatrix[Double] = _
-  var a2: DenseMatrix[Double] = _
-  var z3: DenseMatrix[Double] = _
+  private var z2: DenseMatrix[Double] = _
+  private var a2: DenseMatrix[Double] = _
+  private var z3: DenseMatrix[Double] = _
 
   def isRegressionNet: Boolean = outputLayerSize == 1
 
