@@ -68,7 +68,7 @@ def test_opt():
     plt.grid(1)
     plt.xlabel("Iterations")
     plt.ylabel("Cost")
-    plt.savefig('cost-reduction.png')
+    plt.savefig('cost-reduction.jpg')
 
     print("X prediction: ")
     print(nn.forwardPropagation(X))
@@ -104,7 +104,7 @@ def test_backprop():
     plt.grid(1)
     plt.xlabel("Iterations")
     plt.ylabel("Cost")
-    plt.savefig('cost-reduction-mine.png')
+    plt.savefig('cost-reduction-mine.jpg')
 
 
 def test_xor_backprop():
@@ -134,7 +134,7 @@ def test_xor_backprop():
     plt.grid(1)
     plt.xlabel("Iterations")
     plt.ylabel("Cost")
-    plt.savefig('cost-reduction-xor.png')
+    plt.savefig('cost-reduction-xor.jpg')
 
 
 def compute_numerical_gradients(nn, x, y):
