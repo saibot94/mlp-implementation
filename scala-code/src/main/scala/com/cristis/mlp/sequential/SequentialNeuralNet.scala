@@ -1,6 +1,6 @@
 package com.cristis.mlp.sequential
 
-import breeze.linalg.{DenseMatrix, DenseVector, sum}
+import breeze.linalg.{DenseMatrix, sum}
 import breeze.numerics.pow
 import breeze.stats.distributions.Rand
 import com.cristis.mlp.functions.{sigmoid, sigmoidPrime}

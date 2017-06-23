@@ -42,6 +42,9 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
         val predict1 = net.forward(DenseMatrix((1d, 0d)))
         predict0.data(0) shouldBe 0d +- 0.1d
         predict1.data(0) shouldBe 1d +- 0.1d
+
+        println("predicted: \n" + net.forward(inputMat))
+        println("expected: \n" + y )
       }
       "train the network and lower cost at each step for a more complicated example" in {
         val net = new SequentialNeuralNet(inputLayerSize = 2, alpha = 1)
