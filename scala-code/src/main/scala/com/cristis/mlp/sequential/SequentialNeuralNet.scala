@@ -62,8 +62,8 @@ class SequentialNeuralNet(inputLayerSize: Int,
     zs(0) = x * weights.head
     activations(0) = zs.head.map(n => sigmoid(n))
     // apply sigmoid activation to each member of the matrix
-    for(i <- 1 until weights.length) {
-      zs(i) = activations(i-1) * weights(i)
+    for (i <- 1 until weights.length) {
+      zs(i) = activations(i - 1) * weights(i)
       activations(i) = zs(i).map(n => sigmoid(n))
     }
     activations.last
@@ -78,8 +78,8 @@ class SequentialNeuralNet(inputLayerSize: Int,
   /**
     * Backpropagate and compute the gradients, the derivatives of J (the cost function) with respect to W1 and W2
     *
-    * @param x  the input matrix
-    * @param y  the labels of the training data
+    * @param x the input matrix
+    * @param y the labels of the training data
     * @return a list of matrices representing the gradients of the cost function w.r.t. the weight matrices
     *         of each layer
     */
@@ -89,20 +89,20 @@ class SequentialNeuralNet(inputLayerSize: Int,
     var lastDelta: DenseMatrix[Double] = null
 
 
-    for(i <- zs.length-1 to 0 by -1) {
-        if(i == zs.length-1) {
-          lastDelta = -(y - yhat) :* zs(i).map(z => sigmoidPrime(z))
-          val noReg: DenseMatrix[Double] = (activations(i-1).t * lastDelta).map(r => r / x.rows)
-          gradients(i) = noReg + (weights(i) :* this.lambda)
-        } else if(i == 0) {
-          lastDelta = (lastDelta * weights(i+1).t) :* zs(i).map(z => sigmoidPrime(z))
-          val noReg: DenseMatrix[Double] = (x.t * lastDelta).map(r => r / x.rows)
-          gradients(i) = noReg + (weights(i) :* this.lambda)
-        } else {
-          lastDelta = (lastDelta * weights(i+1).t) :* zs(i).map(z => sigmoidPrime(z))
-          val noReg: DenseMatrix[Double] = (activations(i-1).t * lastDelta).map(r => r / x.rows)
-          gradients(i) =  noReg + (weights(i) :* this.lambda)
-        }
+    for (i <- zs.length - 1 to 0 by -1) {
+      if (i == zs.length - 1) {
+        lastDelta = -(y - yhat) :* zs(i).map(z => sigmoidPrime(z))
+        val noReg: DenseMatrix[Double] = (activations(i - 1).t * lastDelta).map(r => r / x.rows)
+        gradients(i) = noReg + (weights(i) :* this.lambda)
+      } else if (i == 0) {
+        lastDelta = (lastDelta * weights(i + 1).t) :* zs(i).map(z => sigmoidPrime(z))
+        val noReg: DenseMatrix[Double] = (x.t * lastDelta).map(r => r / x.rows)
+        gradients(i) = noReg + (weights(i) :* this.lambda)
+      } else {
+        lastDelta = (lastDelta * weights(i + 1).t) :* zs(i).map(z => sigmoidPrime(z))
+        val noReg: DenseMatrix[Double] = (activations(i - 1).t * lastDelta).map(r => r / x.rows)
+        gradients(i) = noReg + (weights(i) :* this.lambda)
+      }
     }
     gradients.toList
   }
@@ -124,6 +124,58 @@ class SequentialNeuralNet(inputLayerSize: Int,
       i =>
         weights(i) = weights(i) - gradients(i).map(d => d * alpha)
     }
+  }
+
+  /**
+    * Train this neural network
+    *
+    * @param trainX the X dataset, essentially the training set
+    * @param trainY the labels for the training dataset
+    * @param testX  the test dataset
+    * @param testY  the labels for the test dataset
+    * @param its    the number of max iterations that the algorithm should take
+    * @return
+    */
+  def train(trainX: DenseMatrix[Double],
+            trainY: DenseMatrix[Double],
+            testX: DenseMatrix[Double],
+            testY: DenseMatrix[Double],
+            its: Int = 10000,
+            debug: Boolean = false): (Array[Double], Array[Double]) = {
+
+    var costs = Array[Double]()
+    var testCosts = Array[Double]()
+    var newCost = 100d
+    var oldCost = 100d
+    for (i <- 1 to its) {
+      if(debug) {
+        println(s"INFO: NN Iteration #$i")
+      }
+      if (i % 50 == 0){
+        println(s"INFO: NN Iteration #$i")
+        println(s"Cost is now ${costs.last}")
+        println(s"Test cost is now ${testCosts.last}")
+      }
+      this.iterate(trainX, trainY)
+      newCost = this.costFunction(trainX, trainY)
+      costs :+= newCost
+      testCosts :+= this.costFunction(testX, testY)
+      if(debug) {
+        println(s"Cost is now ${costs.last}")
+        println(s"Test cost is now ${testCosts.last}")
+      }
+      if (newCost <= 0.0001d || newCost == 0) {
+        println(s"INFO: NN ran for ${costs.length} steps")
+        return (costs, testCosts)
+      }
+//      if (testCosts.length > 1 && testCosts.last + 0.5 > testCosts(testCosts.length - 2)) {
+//        println("WARN: Stopping early to avoid overfitting!!")
+//        println(s"INFO: NN ran for ${costs.length} steps")
+//        return (costs, testCosts)
+//      }
+      oldCost = newCost
+    }
+    (costs, testCosts)
   }
 
 }

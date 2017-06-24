@@ -7,36 +7,7 @@ import org.scalatest.{Matchers, WordSpec}
   * Created by cristian.schuszter on 6/23/2017.
   */
 class TestSequentialNeuralNet extends WordSpec with Matchers {
-  def train(net: SequentialNeuralNet,
-            trainX: DenseMatrix[Double],
-            trainY: DenseMatrix[Double],
-            testX: DenseMatrix[Double],
-            testY: DenseMatrix[Double],
-            its: Int = 10000): (Array[Double], Array[Double]) = {
 
-    var costs = Array[Double]()
-    var testCosts = Array[Double]()
-    var newCost = 100d
-    var oldCost = 100d
-    for (i <- 1 to its) {
-      net.iterate(trainX, trainY)
-      newCost = net.costFunction(trainX, trainY)
-      costs :+= newCost
-      testCosts :+= net.costFunction(testX, testY)
-      if (newCost <= 0.0001d || newCost == 0) {
-        println(s"INFO: NN ran for ${costs.length} steps")
-        return (costs, testCosts)
-      }
-      if(testCosts.length > 1 && testCosts.last > testCosts(testCosts.length-2)) {
-        println("WARN: Stopping early to avoid overfitting!!")
-        println(s"INFO: NN ran for ${costs.length} steps")
-        return (costs, testCosts)
-      }
-      oldCost should be >= newCost
-      oldCost = newCost
-    }
-    (costs, testCosts)
-  }
 
   "SequentialNeuralNet.forward" when {
     "forward propagating" should {
@@ -59,7 +30,7 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
         val trainX = DenseMatrix((1d, 1d), (0d, 1d), (1d, 0d), (0d, 0d))
         val y = DenseMatrix(0d, 1d, 1d, 0d)
 
-        val (costs, testCosts) = train(net, trainX, y, trainX, y)
+        val (costs, testCosts) = net.train(trainX, y, trainX, y)
         val predict0 = net.forward(DenseMatrix((1d, 1d)))
         val predict1 = net.forward(DenseMatrix((1d, 0d)))
         predict0.data(0) shouldBe 0d +- 0.1d
@@ -89,7 +60,7 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
         val ynorm = y :/ 100d
 
         val trainXReg = trainX(*, ::) / max(trainX(*, ::))
-        val (costs, testCosts) = train(net, trainXReg, ynorm, trainXReg, ynorm)
+        val (costs, testCosts) = net.train(trainXReg, ynorm, trainXReg, ynorm)
         val predict0 = net.forward(trainXReg)
         predict0.data(0) * 100d shouldBe 75d +- 1d
 
@@ -130,7 +101,7 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
         testY = testY :/ 100d
         testX = testX(*, ::) / max(testX(*, ::))
 
-        val (costs, trainCosts) = train(net, trainX, trainY, testX, testY, its =  5000)
+        val (costs, trainCosts) = net.train(trainX, trainY, testX, testY, its =  5000)
 
 
         println("predicted: \n" + net.forward(testX))

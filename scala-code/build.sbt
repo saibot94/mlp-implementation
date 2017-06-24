@@ -15,4 +15,4 @@ resolvers ++= Seq(
     "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
-mainClass in assembly := Some("com.cristis.mlp.Hello")
+mainClass in assembly := Some("com.cristis.mlp.TrainMNISTDataset")
