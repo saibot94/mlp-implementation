@@ -7,6 +7,7 @@ scalaVersion := "2.11.11"
 libraryDependencies ++= Seq(
   "org.scalatest" % "scalatest_2.11" % "3.0.1",
   "org.apache.spark" %% "spark-core" % "2.1.1",
+  "org.apache.spark" %% "spark-mllib" % "2.1.1",
   "org.scalanlp" %% "breeze" % "0.12",
   "org.scalanlp" %% "breeze-viz" % "0.12"
 )
