@@ -1,6 +1,6 @@
 package com.cristis.mlp.sequential
 
-import breeze.linalg.{DenseMatrix, sum}
+import breeze.linalg.{DenseMatrix, max, sum}
 import breeze.numerics.pow
 import breeze.stats.distributions.Rand
 import com.cristis.mlp.functions.{sigmoid, sigmoidPrime}
@@ -69,6 +69,29 @@ class SequentialNeuralNet(inputLayerSize: Int,
     activations.last
   }
 
+  def predict(x: DenseMatrix[Double]): DenseMatrix[Double] = {
+    val predictions = forward(x)
+    if(this.isRegressionNet) {
+      predictions
+    } else {
+      val labels =  (0 until predictions.rows).map{ i =>
+        val m = predictions(i, ::)
+        val maxval = max(m.inner)
+        var j = 0
+        var result = 0
+        m.inner.foreachValue {
+          v =>
+            if(v == maxval) {
+              result = j
+            }
+            j+=1
+        }
+        result.toDouble
+      }
+      DenseMatrix(labels :_*)
+    }
+  }
+
   def costFunction(x: DenseMatrix[Double], y: DenseMatrix[Double]): Double = {
     yhat = this.forward(x)
     val sumOfSquareWeights = weights.map(w => pow(sum(w), 2)).toList.sum
@@ -113,16 +136,27 @@ class SequentialNeuralNet(inputLayerSize: Int,
     * @param x the matrix of inputs
     * @param y the expected values
     */
-  def iterate(x: DenseMatrix[Double], y: DenseMatrix[Double]): Unit = {
-    val gradients = backpropagate(x, y)
-    applyChanges(gradients)
+  def iterate(x: DenseMatrix[Double], y: DenseMatrix[Double], miniBatchSize: Int): Unit = {
+    for(i <- 0 until x.rows by miniBatchSize) {
+      val gradients = if(i+miniBatchSize < x.rows) {
+        val sampleX = x(i until i+miniBatchSize, ::)
+        val sampleY = y(i until i+miniBatchSize, ::)
+        backpropagate(sampleX, sampleY)
+      } else {
+        val sampleX = x(i until x.rows, ::)
+        val sampleY = y(i until x.rows, ::)
+        backpropagate(sampleX, sampleY)
+      }
+      applyChanges(gradients, miniBatchSize)
+    }
+
   }
 
 
-  private def applyChanges(gradients: List[DenseMatrix[Double]]): Unit = {
+  private def applyChanges(gradients: List[DenseMatrix[Double]], miniBatchSize: Int): Unit = {
     gradients.indices.foreach {
       i =>
-        weights(i) = weights(i) - gradients(i).map(d => d * alpha)
+        weights(i) = weights(i) - gradients(i).map(d => d * (alpha / miniBatchSize))
     }
   }
 
@@ -141,6 +175,7 @@ class SequentialNeuralNet(inputLayerSize: Int,
             testX: DenseMatrix[Double],
             testY: DenseMatrix[Double],
             its: Int = 10000,
+            miniBatchSize: Int = 1,
             debug: Boolean = false): (Array[Double], Array[Double]) = {
 
     var costs = Array[Double]()
@@ -156,7 +191,7 @@ class SequentialNeuralNet(inputLayerSize: Int,
         println(s"Cost is now ${costs.last}")
         println(s"Test cost is now ${testCosts.last}")
       }
-      this.iterate(trainX, trainY)
+      this.iterate(trainX, trainY, miniBatchSize)
       newCost = this.costFunction(trainX, trainY)
       costs :+= newCost
       testCosts :+= this.costFunction(testX, testY)

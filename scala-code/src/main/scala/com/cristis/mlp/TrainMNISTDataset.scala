@@ -12,12 +12,12 @@ object TrainMNISTDataset {
     println("==== Reading training images (60k)")
     val trainFile = "C:\\Users\\chris\\Desktop\\mnist\\train-images.idx3-ubyte"
     val trainLabelFile = "C:\\Users\\chris\\Desktop\\mnist\\train-labels.idx1-ubyte"
-    val trainReader = new IdxReader(trainFile, trainLabelFile, limit = Some(1000))
+    val trainReader = new IdxReader(trainFile, trainLabelFile, limit = Some(20000))
 
     println("==== Reading test images (10k)")
     val testFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte"
     val testLabelFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-labels.idx1-ubyte"
-    val testReader = new IdxReader(testFile, testLabelFile, limit = Some(100))
+    val testReader = new IdxReader(testFile, testLabelFile, limit = Some(2000))
 
 
     println("==== Successfully read all images, starting training of network...")
@@ -39,23 +39,53 @@ object TrainMNISTDataset {
     val validateX  = IdxReader.imageVectorToMatrix(testXImages.take(10)).map(x => x / 255d)
     val validateY = IdxReader.imageVectorToMatrix(testYLabels.take(10))
 
-    println(testX)
-    println("y == ")
-    println(testY)
+    val (costs, testCosts) = net.train(trainX, trainY, testX, testY, its = 30, debug = true, miniBatchSize = 10)
 
-    println("=== Predicted: ")
-    println(net.forward(validateX).map(x => scala.math.round(x)))
+    val actual = net.predict(testX).data.map(_.toInt).toList
+    val actualTrain = net.predict(trainX).data.map(_.toInt).toList
 
-    println("=== Expected: ")
-    println(validateY.map(x => scala.math.round(x)))
-    println(validateY.data.mkString(" "))
-    val (costs, testCosts) = net.train(trainX, trainY, testX, testY, its = 2000, debug = false)
+    val expected = (0 until testY.rows).map { i =>
+      val m = testY(i, ::)
+      val maxval = max(m.inner)
+      var j = 0
+      var result = 0
+      m.inner.foreachValue {
+        v =>
+          if(v == maxval) {
+            result = j
+          }
+          j+=1
+      }
+      result
+    }.toList
 
-    println("=== Predicted: ")
-    println(net.forward(validateX).map(x => scala.math.round(x)))
+    val expectedTrain = (0 until trainY.rows).map { i =>
+      val m = trainY(i, ::)
+      val maxval = max(m.inner)
+      var j = 0
+      var result = 0
+      m.inner.foreachValue {
+        v =>
+          if(v == maxval) {
+            result = j
+          }
+          j+=1
+      }
+      result
+    }.toList
 
-    println("=== Expected: ")
-    println(validateY.map(x => scala.math.round(x)))
+
+    println("testx: ")
+    println(actual)
+
+    println("testy: ")
+    println(expected)
+
+
+    val accuracyTrain = expectedTrain.zip(actualTrain).count { case (a, b) => a == b }.toDouble / actualTrain.size.toDouble
+    val accuracy = expected.zip(actual).count { case (a, b) => a == b }.toDouble / expected.size.toDouble
+    println(s"Final accuracy on train dataset: ${accuracyTrain * 100}% ; after 30 iterations")
+    println(s"Final accuracy on test dataset: ${accuracy * 100}% ; after 30 iterations")
     PlotUtil.plotNeuralNetworkOutput(costs, testCosts, "mnist_full")
   }
 }
