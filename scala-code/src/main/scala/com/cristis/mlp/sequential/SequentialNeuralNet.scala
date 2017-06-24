@@ -25,7 +25,14 @@ class SequentialNeuralNet(inputLayerSize: Int,
     */
   var weights: Array[DenseMatrix[Double]] = buildWeightsForHiddenLayerAndOutputs
 
-  private var applications: Array[DenseMatrix[Double]] = new Array[DenseMatrix[Double]](weights.length)
+  /**
+    * The elements of the activation on each layer. They are matrices of prevLayerSize x nextLayerSize
+    */
+  private var zs: Array[DenseMatrix[Double]] = new Array[DenseMatrix[Double]](weights.length)
+
+  /**
+    * The applications of the sigmoid functions on each of the z matrices on each hidden layer
+    */
   private var activations: Array[DenseMatrix[Double]] = new Array[DenseMatrix[Double]](weights.length)
   private var yhat: DenseMatrix[Double] = _
 
@@ -51,12 +58,12 @@ class SequentialNeuralNet(inputLayerSize: Int,
     * @param x matrix of inputs that needs forward propagation through the network
     */
   def forward(x: DenseMatrix[Double]): DenseMatrix[Double] = {
-    applications(0) = x * weights.head
-    activations(0) = applications.head.map(n => sigmoid(n))
+    zs(0) = x * weights.head
+    activations(0) = zs.head.map(n => sigmoid(n))
     // apply sigmoid activation to each member of the matrix
     for(i <- 1 until weights.length) {
-      applications(i) = activations(i-1) * weights(i)
-      activations(i) = applications(i).map(n => sigmoid(n))
+      zs(i) = activations(i-1) * weights(i)
+      activations(i) = zs(i).map(n => sigmoid(n))
     }
     activations.last
   }
@@ -69,9 +76,10 @@ class SequentialNeuralNet(inputLayerSize: Int,
   /**
     * Backpropagate and compute the gradients, the derivatives of J (the cost function) with respect to W1 and W2
     *
-    * @param x
-    * @param y
-    * @return a pair of matrices for the dJW1 and dJW2 gradients
+    * @param x  the input matrix
+    * @param y  the labels of the training data
+    * @return a list of matrices representing the gradients of the cost function w.r.t. the weight matrices
+    *         of each layer
     */
   def backpropagate(x: DenseMatrix[Double], y: DenseMatrix[Double]): List[DenseMatrix[Double]] = {
     yhat = this.forward(x)
@@ -79,15 +87,15 @@ class SequentialNeuralNet(inputLayerSize: Int,
     var lastDelta: DenseMatrix[Double] = null
 
 
-    for(i <- applications.length-1 to 0 by -1) {
-        if(i == applications.length-1) {
-          lastDelta = -(y - yhat) :* applications(i).map(z => sigmoidPrime(z))
+    for(i <- zs.length-1 to 0 by -1) {
+        if(i == zs.length-1) {
+          lastDelta = -(y - yhat) :* zs(i).map(z => sigmoidPrime(z))
           gradients(i) = activations(i-1).t * lastDelta
         } else if(i == 0) {
-          lastDelta = (lastDelta * weights(i+1).t) :* applications(i).map(z => sigmoidPrime(z))
+          lastDelta = (lastDelta * weights(i+1).t) :* zs(i).map(z => sigmoidPrime(z))
           gradients(i) = x.t * lastDelta
         } else {
-          lastDelta = (lastDelta * weights(i+1).t) :* applications(i).map(z => sigmoidPrime(z))
+          lastDelta = (lastDelta * weights(i+1).t) :* zs(i).map(z => sigmoidPrime(z))
           gradients(i) = activations(i-1).t * lastDelta
         }
     }

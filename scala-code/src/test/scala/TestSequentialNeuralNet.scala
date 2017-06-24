@@ -16,7 +16,7 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
       costs :+= newCost
       oldCost should be >= newCost
       oldCost = newCost
-      if(newCost <= 0.0001d)
+      if(newCost <= 0.0001d || newCost == 0)
         return costs
     }
     costs
@@ -63,7 +63,7 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
         f.saveas("perceptron-xor-costs.png")
       }
       "train the network and lower cost at each step for a more complicated example" in {
-        val net = new SequentialNeuralNet(inputLayerSize = 2, hiddenLayers = List(4, 3, 2), alpha = 1)
+        val net = new SequentialNeuralNet(inputLayerSize = 2, hiddenLayers = List(4), alpha = 1)
         val inputMat = DenseMatrix((3d, 5d), (5d, 1d), (10d, 2d))
         val y = DenseMatrix(75d, 82d, 93d)
         val ynorm = y :/ 100d
