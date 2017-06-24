@@ -55,10 +55,10 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
       "train the network and lower cost at each step" in {
 
         println("===== XOR test")
-        val net = new SequentialNeuralNet(inputLayerSize = 2, hiddenLayers = List(3, 3), alpha = 1)
+        val net = new SequentialNeuralNet(inputLayerSize = 2, hiddenLayers = List(4), alpha = 1)
         val trainX = DenseMatrix((1d, 1d), (0d, 1d), (1d, 0d), (0d, 0d))
         val y = DenseMatrix(0d, 1d, 1d, 0d)
-        println(net.forward(trainX))
+
         val (costs, testCosts) = train(net, trainX, y, trainX, y)
         val predict0 = net.forward(DenseMatrix((1d, 1d)))
         val predict1 = net.forward(DenseMatrix((1d, 0d)))
@@ -77,8 +77,8 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
         val x = DenseVector[Double]((0 until yc.length).map(_.toDouble).toArray)
         p += plot(x, yc)
 
-        f.height = 768
-        f.width = 1366
+        f.height = 1080
+        f.width = 1920
         f.saveas("perceptron-xor-costs.png")
       }
       "train the network and lower cost at each step for a more complicated example" in {
@@ -105,8 +105,8 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
         val x = DenseVector[Double]((0 until yc.length).map(_.toDouble).toArray)
         p += plot(x, yc)
 
-        f.height = 768
-        f.width = 1366
+        f.height = 1080
+        f.width = 1920
         f.saveas("sleep-grades-costs.png")
       }
     }
@@ -147,9 +147,10 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
 
         val xTest = DenseVector[Double]((0 until yTestc.length).map(_.toDouble).toArray)
         p += plot(x, yc)
-        p += plot(xTest, yTestc)
-        f.height = 768
-        f.width = 1366
+        p += plot(xTest, yTestc, '.')
+
+        f.height = 1080
+        f.width = 1920
         f.saveas("overfitting.png")
 
       }
