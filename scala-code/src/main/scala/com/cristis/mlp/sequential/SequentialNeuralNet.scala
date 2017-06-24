@@ -14,7 +14,8 @@ import com.cristis.mlp.functions.{sigmoid, sigmoidPrime}
 class SequentialNeuralNet(inputLayerSize: Int,
                           outputLayerSize: Int = 1,
                           hiddenLayers: List[Int] = List(3),
-                          alpha: Double = 1) {
+                          alpha: Double = 1,
+                          lambda: Double = 0.0001) {
 
   if (hiddenLayers == null || hiddenLayers.length < 1) {
     throw new IllegalArgumentException("There must be at least one hidden layer")
@@ -70,7 +71,8 @@ class SequentialNeuralNet(inputLayerSize: Int,
 
   def costFunction(x: DenseMatrix[Double], y: DenseMatrix[Double]): Double = {
     yhat = this.forward(x)
-    0.5d * sum(pow(y - yhat, 2))
+    val sumOfSquareWeights = weights.map(w => pow(sum(w), 2)).toList.sum
+    0.5d * sum(pow(y - yhat, 2)) / x.rows + ((this.lambda / 2d) * sumOfSquareWeights)
   }
 
   /**
@@ -90,13 +92,16 @@ class SequentialNeuralNet(inputLayerSize: Int,
     for(i <- zs.length-1 to 0 by -1) {
         if(i == zs.length-1) {
           lastDelta = -(y - yhat) :* zs(i).map(z => sigmoidPrime(z))
-          gradients(i) = activations(i-1).t * lastDelta
+          val noReg: DenseMatrix[Double] = (activations(i-1).t * lastDelta).map(r => r / x.rows)
+          gradients(i) = noReg + (weights(i) :* this.lambda)
         } else if(i == 0) {
           lastDelta = (lastDelta * weights(i+1).t) :* zs(i).map(z => sigmoidPrime(z))
-          gradients(i) = x.t * lastDelta
+          val noReg: DenseMatrix[Double] = (x.t * lastDelta).map(r => r / x.rows)
+          gradients(i) = noReg + (weights(i) :* this.lambda)
         } else {
           lastDelta = (lastDelta * weights(i+1).t) :* zs(i).map(z => sigmoidPrime(z))
-          gradients(i) = activations(i-1).t * lastDelta
+          val noReg: DenseMatrix[Double] = (activations(i-1).t * lastDelta).map(r => r / x.rows)
+          gradients(i) =  noReg + (weights(i) :* this.lambda)
         }
     }
     gradients.toList
