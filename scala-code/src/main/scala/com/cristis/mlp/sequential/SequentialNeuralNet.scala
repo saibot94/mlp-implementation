@@ -8,26 +8,39 @@ import com.cristis.mlp.functions.{sigmoid, sigmoidPrime}
 /**
   * Class representing a multilayer perceptron with only 1 hidden layer
   * Created by cristian.schuszter on 6/23/2017.
+  *
+  *
   */
 class SequentialNeuralNet(inputLayerSize: Int,
-                          hiddenLayerSize: Int = 3,
                           outputLayerSize: Int = 1,
+                          hiddenLayers: List[Int] = List(3),
                           alpha: Double = 1) {
 
-  /**
-    * The first set of weights, mapping from the input to the first hidden layer
-    */
-  var w1: DenseMatrix[Double] = DenseMatrix.rand(inputLayerSize, hiddenLayerSize, Rand.gaussian)
+  if (hiddenLayers == null || hiddenLayers.length < 1) {
+    throw new IllegalArgumentException("There must be at least one hidden layer")
+  }
 
   /**
     * The second set of weights, mapping from the hidden layer to the output layer
     */
-  var w2: DenseMatrix[Double] = DenseMatrix.rand(hiddenLayerSize, outputLayerSize, Rand.gaussian)
+  var weights: Array[DenseMatrix[Double]] = buildWeightsForHiddenLayerAndOutputs
 
-  private var z2: DenseMatrix[Double] = _
-  private var a2: DenseMatrix[Double] = _
-  private var z3: DenseMatrix[Double] = _
+  private var applications: Array[DenseMatrix[Double]] = new Array[DenseMatrix[Double]](weights.length)
+  private var activations: Array[DenseMatrix[Double]] = new Array[DenseMatrix[Double]](weights.length)
   private var yhat: DenseMatrix[Double] = _
+
+  private def buildWeightsForHiddenLayerAndOutputs: Array[DenseMatrix[Double]] = {
+    val w = hiddenLayers.indices.map {
+      i =>
+        if (i == 0) {
+          DenseMatrix.rand(inputLayerSize, hiddenLayers.head, Rand.gaussian)
+        }
+        else {
+          DenseMatrix.rand(hiddenLayers(i - 1), hiddenLayers(i), Rand.gaussian)
+        }
+    }
+    (w ++ Seq(DenseMatrix.rand(hiddenLayers.last, outputLayerSize, Rand.gaussian))).toArray
+  }
 
   def isRegressionNet: Boolean = outputLayerSize == 1
 
@@ -38,11 +51,14 @@ class SequentialNeuralNet(inputLayerSize: Int,
     * @param x matrix of inputs that needs forward propagation through the network
     */
   def forward(x: DenseMatrix[Double]): DenseMatrix[Double] = {
-    z2 = x * w1
+    applications(0) = x * weights.head
+    activations(0) = applications.head.map(n => sigmoid(n))
     // apply sigmoid activation to each member of the matrix
-    a2 = z2.map(n => sigmoid(n))
-    z3 = a2 * w2
-    z3.map(n => sigmoid(n))
+    for(i <- 1 until weights.length) {
+      applications(i) = activations(i-1) * weights(i)
+      activations(i) = applications(i).map(n => sigmoid(n))
+    }
+    activations.last
   }
 
   def costFunction(x: DenseMatrix[Double], y: DenseMatrix[Double]): Double = {
@@ -57,14 +73,25 @@ class SequentialNeuralNet(inputLayerSize: Int,
     * @param y
     * @return a pair of matrices for the dJW1 and dJW2 gradients
     */
-  def backpropagate(x: DenseMatrix[Double], y: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double]) = {
+  def backpropagate(x: DenseMatrix[Double], y: DenseMatrix[Double]): List[DenseMatrix[Double]] = {
     yhat = this.forward(x)
-    val delta3: DenseMatrix[Double] = -(y - yhat) :*  z3.map(z => sigmoidPrime(z))
-    val dJdw2 = a2.t * delta3
+    var gradients: Array[DenseMatrix[Double]] = new Array(weights.length)
+    var lastDelta: DenseMatrix[Double] = null
 
-    val delta2 = (delta3 * w2.t)  :* z2.map(z => sigmoidPrime(z))
-    val dJw1 = x.t * delta2
-    (dJw1, dJdw2)
+
+    for(i <- applications.length-1 to 0 by -1) {
+        if(i == applications.length-1) {
+          lastDelta = -(y - yhat) :* applications(i).map(z => sigmoidPrime(z))
+          gradients(i) = activations(i-1).t * lastDelta
+        } else if(i == 0) {
+          lastDelta = (lastDelta * weights(i+1).t) :* applications(i).map(z => sigmoidPrime(z))
+          gradients(i) = x.t * lastDelta
+        } else {
+          lastDelta = (lastDelta * weights(i+1).t) :* applications(i).map(z => sigmoidPrime(z))
+          gradients(i) = activations(i-1).t * lastDelta
+        }
+    }
+    gradients.toList
   }
 
   /**
@@ -74,14 +101,16 @@ class SequentialNeuralNet(inputLayerSize: Int,
     * @param y the expected values
     */
   def iterate(x: DenseMatrix[Double], y: DenseMatrix[Double]): Unit = {
-    val (djw1, djw2) = backpropagate(x, y)
-    applyChanges(djw1, djw2)
+    val gradients = backpropagate(x, y)
+    applyChanges(gradients)
   }
 
 
-  private def applyChanges(djw1: DenseMatrix[Double], djw2: DenseMatrix[Double]): Unit = {
-    w1 = w1 - djw1.map(d => d * alpha)
-    w2 = w2 - djw2.map(d => d * alpha)
+  private def applyChanges(gradients: List[DenseMatrix[Double]]): Unit = {
+    gradients.indices.foreach {
+      i =>
+        weights(i) = weights(i) - gradients(i).map(d => d * alpha)
+    }
   }
 
 }
