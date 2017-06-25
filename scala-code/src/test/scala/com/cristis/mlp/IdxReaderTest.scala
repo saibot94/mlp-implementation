@@ -1,3 +1,5 @@
+package com.cristis.mlp
+
 import com.cristis.mlp.util.{IdxImageWriter, IdxReader, PlotUtil}
 import org.scalatest.{Matchers, WordSpec}
 

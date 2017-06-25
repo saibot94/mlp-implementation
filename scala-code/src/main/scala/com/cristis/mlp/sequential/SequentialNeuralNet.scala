@@ -7,23 +7,24 @@ import com.cristis.mlp.functions.{sigmoid, sigmoidPrime}
 
 
 object SequentialNeuralNet {
-    def convertYToPredictions(y: DenseMatrix[Double]) :List[Int]= {
-      (0 until y.rows).map { i =>
-        val m = y(i, ::)
-        val maxval = max(m.inner)
-        var j = 0
-        var result = 0
-        m.inner.foreachValue {
-          v =>
-            if(v == maxval) {
-              result = j
-            }
-            j+=1
-        }
-        result
-      }.toList
-    }
+  def convertYToPredictions(y: DenseMatrix[Double]): List[Int] = {
+    (0 until y.rows).map { i =>
+      val m = y(i, ::)
+      val maxval = max(m.inner)
+      var j = 0
+      var result = 0
+      m.inner.foreachValue {
+        v =>
+          if (v == maxval) {
+            result = j
+          }
+          j += 1
+      }
+      result
+    }.toList
+  }
 }
+
 /**
   * Class representing a multilayer perceptron with only 1 hidden layer
   * Created by cristian.schuszter on 6/23/2017.
@@ -55,6 +56,7 @@ class SequentialNeuralNet(inputLayerSize: Int,
     */
   private var activations: Array[DenseMatrix[Double]] = new Array[DenseMatrix[Double]](weights.length)
   private var accuracies: Array[Double] = new Array[Double](0)
+
   def getAccuracyChart: Array[Double] = accuracies
 
   private var yhat: DenseMatrix[Double] = _
@@ -94,24 +96,24 @@ class SequentialNeuralNet(inputLayerSize: Int,
 
   def predict(x: DenseMatrix[Double]): DenseMatrix[Double] = {
     val predictions = forward(x)
-    if(this.isRegressionNet) {
+    if (this.isRegressionNet) {
       predictions
     } else {
-      val labels =  (0 until predictions.rows).map{ i =>
+      val labels = (0 until predictions.rows).map { i =>
         val m = predictions(i, ::)
         val maxval = max(m.inner)
         var j = 0
         var result = 0
         m.inner.foreachValue {
           v =>
-            if(v == maxval) {
+            if (v == maxval) {
               result = j
             }
-            j+=1
+            j += 1
         }
         result.toDouble
       }
-      DenseMatrix(labels :_*)
+      DenseMatrix(labels: _*)
     }
   }
 
@@ -160,27 +162,41 @@ class SequentialNeuralNet(inputLayerSize: Int,
     * @param y the expected values
     */
   def iterate(x: DenseMatrix[Double], y: DenseMatrix[Double], miniBatchSize: Int): Unit = {
-    for(i <- 0 until x.rows by miniBatchSize) {
-      val gradients = if(i+miniBatchSize < x.rows) {
-        val sampleX = x(i until i+miniBatchSize, ::)
-        val sampleY = y(i until i+miniBatchSize, ::)
-        backpropagate(sampleX, sampleY)
-      } else {
-        val sampleX = x(i until x.rows, ::)
-        val sampleY = y(i until x.rows, ::)
-        backpropagate(sampleX, sampleY)
+    if (miniBatchSize > 0) {
+      for (i <- 0 until x.rows by miniBatchSize) {
+        val gradients = if (i + miniBatchSize < x.rows) {
+          val sampleX = x(i until i + miniBatchSize, ::)
+          val sampleY = y(i until i + miniBatchSize, ::)
+          backpropagate(sampleX, sampleY)
+        } else {
+          val sampleX = x(i until x.rows, ::)
+          val sampleY = y(i until x.rows, ::)
+          backpropagate(sampleX, sampleY)
+        }
+        applyChanges(gradients, miniBatchSize)
       }
+    } else {
+      val gradients = backpropagate(x, y)
       applyChanges(gradients, miniBatchSize)
     }
+
 
   }
 
 
   private def applyChanges(gradients: List[DenseMatrix[Double]], miniBatchSize: Int): Unit = {
-    gradients.indices.foreach {
-      i =>
-        weights(i) = weights(i) - gradients(i).map(d => d * (alpha / miniBatchSize))
+    if (miniBatchSize > 0) {
+      gradients.indices.foreach {
+        i =>
+          weights(i) = weights(i) - gradients(i).map(d => d * (alpha / miniBatchSize))
+      }
+    } else {
+      gradients.indices.foreach {
+        i =>
+          weights(i) = weights(i) - gradients(i).map(d => d * alpha)
+      }
     }
+
   }
 
   /**
@@ -198,7 +214,7 @@ class SequentialNeuralNet(inputLayerSize: Int,
             testX: DenseMatrix[Double],
             testY: DenseMatrix[Double],
             its: Int = 10000,
-            miniBatchSize: Int = 1,
+            miniBatchSize: Int = 0,
             debug: Boolean = false): (Array[Double], Array[Double]) = {
 
     var costs = Array[Double]()
@@ -206,10 +222,10 @@ class SequentialNeuralNet(inputLayerSize: Int,
     var newCost = 100d
     var oldCost = 100d
     for (i <- 1 to its) {
-      if(debug) {
+      if (debug) {
         println(s"INFO: NN Iteration #$i")
       }
-      if (i % 50 == 0){
+      if (i % 50 == 0) {
         println(s"INFO: NN Iteration #$i")
         println(s"Cost is now ${costs.last}")
         println(s"Test cost is now ${testCosts.last}")
@@ -218,7 +234,7 @@ class SequentialNeuralNet(inputLayerSize: Int,
       newCost = this.costFunction(trainX, trainY)
       costs :+= newCost
       testCosts :+= this.costFunction(testX, testY)
-      if(debug) {
+      if (debug) {
         println(s"Cost is now ${costs.last}")
         println(s"Test cost is now ${testCosts.last}")
         accuracies :+= this.getAccuracy(testX, testY) * 100
@@ -228,11 +244,11 @@ class SequentialNeuralNet(inputLayerSize: Int,
         println(s"INFO: NN ran for ${costs.length} steps")
         return (costs, testCosts)
       }
-//      if (testCosts.length > 1 && testCosts.last + 0.5 > testCosts(testCosts.length - 2)) {
-//        println("WARN: Stopping early to avoid overfitting!!")
-//        println(s"INFO: NN ran for ${costs.length} steps")
-//        return (costs, testCosts)
-//      }
+      //      if (testCosts.length > 1 && testCosts.last + 0.5 > testCosts(testCosts.length - 2)) {
+      //        println("WARN: Stopping early to avoid overfitting!!")
+      //        println(s"INFO: NN ran for ${costs.length} steps")
+      //        return (costs, testCosts)
+      //      }
       oldCost = newCost
     }
     (costs, testCosts)
@@ -240,6 +256,7 @@ class SequentialNeuralNet(inputLayerSize: Int,
 
   /**
     * Get the accuracy of predicting a matrix X and comparing it with the expected values
+    *
     * @param x - matrix
     * @param y - classes which should be "triggered" by the prediction
     * @return prediction as a double

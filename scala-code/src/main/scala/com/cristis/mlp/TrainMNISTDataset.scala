@@ -54,5 +54,12 @@ object TrainMNISTDataset {
     println(s"Final accuracy on test dataset: ${net.getAccuracy(testX, testY) * 100}% ; after 30 iterations")
     PlotUtil.plotNeuralNetworkOutput(costs, testCosts, "mnist_full")
     PlotUtil.plotAccuracy(net.getAccuracyChart, "mnist_full_accuracy")
+
+    PlotUtil.plotImages(trainReader.getCols,
+      trainReader.getRows,
+      testXImages.take(10).toList,
+      testReader.getLabels.take(10),
+      "predictions_mnist_full",
+      predicted = Some(actual))
   }
 }

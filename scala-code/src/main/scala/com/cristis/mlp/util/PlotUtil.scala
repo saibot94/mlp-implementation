@@ -48,7 +48,7 @@ object PlotUtil {
 
 
   def plotImages(cols: Int, rows:Int, images: List[Array[Int]], labels: Vector[Int],
-                   fileName: String): Unit = {
+                   fileName: String, predicted: Option[List[Int]] = None): Unit = {
     val f = Figure()
     import breeze.plot.image
     var j = 0
@@ -60,6 +60,9 @@ object PlotUtil {
         }
         f.subplot(5, 5, j) += image(pl.t)
         f.subplot(5, 5, j).title = s"Label: ${labels(j)}"
+        if(predicted.isDefined) {
+          f.subplot(5, 5, j).title += s"/ Predicted: ${predicted.get(j)} "
+        }
         j += 1
     }
     f.height = 1080

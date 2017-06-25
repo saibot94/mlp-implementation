@@ -1,4 +1,6 @@
-import breeze.linalg.{*, DenseMatrix, DenseVector, linspace, max}
+package com.cristis.mlp
+
+import breeze.linalg.{*, DenseMatrix, DenseVector, max}
 import breeze.plot._
 import com.cristis.mlp.sequential.SequentialNeuralNet
 import org.scalatest.{Matchers, WordSpec}
@@ -26,18 +28,20 @@ class TestSequentialNeuralNet extends WordSpec with Matchers {
       "train the network and lower cost at each step" in {
 
         println("===== XOR test")
-        val net = new SequentialNeuralNet(inputLayerSize = 2, hiddenLayers = List(4), alpha = 1)
+        val net = new SequentialNeuralNet(inputLayerSize = 2, hiddenLayers = List(3), alpha = 3.0)
         val trainX = DenseMatrix((1d, 1d), (0d, 1d), (1d, 0d), (0d, 0d))
         val y = DenseMatrix(0d, 1d, 1d, 0d)
 
-        val (costs, testCosts) = net.train(trainX, y, trainX, y)
-        val predict0 = net.forward(DenseMatrix((1d, 1d)))
-        val predict1 = net.forward(DenseMatrix((1d, 0d)))
-        predict0.data(0) shouldBe 0d +- 0.1d
-        predict1.data(0) shouldBe 1d +- 0.1d
+        val (costs, testCosts) = net.train(trainX, y, trainX, y, its = 10000)
 
         println("predicted: \n" + net.forward(trainX))
         println("expected: \n" + y)
+
+        val predict0 = net.forward(DenseMatrix((1d, 1d)))
+        val predict1 = net.forward(DenseMatrix((1d, 0d)))
+
+        predict0.data(0) shouldBe 0d +- 0.2d
+        predict1.data(0) shouldBe 1d +- 0.2d
 
 
         val f = Figure()
