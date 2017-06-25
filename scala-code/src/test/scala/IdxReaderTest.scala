@@ -1,4 +1,4 @@
-import com.cristis.mlp.util.{IdxImageWriter, IdxReader}
+import com.cristis.mlp.util.{IdxImageWriter, IdxReader, PlotUtil}
 import org.scalatest.{Matchers, WordSpec}
 
 /**
@@ -22,7 +22,7 @@ class IdxReaderTest extends WordSpec with Matchers {
       "write an image" in {
         val trainFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte"
         val labelFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-labels.idx1-ubyte"
-        val reader = new IdxReader(trainFile, labelFile)
+        val reader = new IdxReader(trainFile, labelFile, Some(10))
 
         val images = reader.getImages.take(10)
         val labels = reader.getLabels.take(10)
@@ -34,6 +34,21 @@ class IdxReaderTest extends WordSpec with Matchers {
         }
 
 
+      }
+    }
+
+    "writing a composite file" should {
+      "write a composite image" in {
+        val trainFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte"
+        val labelFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-labels.idx1-ubyte"
+        val reader = new IdxReader(trainFile, labelFile, Some(10))
+
+        val images = reader.getImages.take(10)
+        val labels = reader.getLabels.take(10)
+        val writer = new IdxImageWriter(reader.getRows, reader.getCols)
+
+        val mappedImages = images.map(im => writer.getPlotImageData(im)).toList
+        PlotUtil.plotImages(reader.getCols, reader.getRows, mappedImages,labels, "composite_number_plot")
       }
     }
   }

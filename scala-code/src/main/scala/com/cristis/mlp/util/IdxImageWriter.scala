@@ -27,4 +27,10 @@ class IdxImageWriter(rowNr: Int, colNr: Int) {
     }
   }
 
+  def getPlotImageData(imageBytes: Array[Int]): Array[Int] = {
+    imageBytes.map { gray =>
+      0xFF000000 | (gray << 16) | (gray << 8) | gray
+    }
+  }
+
 }

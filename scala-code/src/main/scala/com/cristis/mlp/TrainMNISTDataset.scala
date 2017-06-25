@@ -12,7 +12,7 @@ object TrainMNISTDataset {
     println("==== Reading training images (60k)")
     val trainFile = "C:\\Users\\chris\\Desktop\\mnist\\train-images.idx3-ubyte"
     val trainLabelFile = "C:\\Users\\chris\\Desktop\\mnist\\train-labels.idx1-ubyte"
-    val trainReader = new IdxReader(trainFile, trainLabelFile, limit = Some(30000))
+    val trainReader = new IdxReader(trainFile, trainLabelFile, limit = Some(60000))
 
     println("==== Reading test images (10k)")
     val testFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte"
@@ -23,7 +23,7 @@ object TrainMNISTDataset {
     println("==== Successfully read all images, starting training of network...")
     // The input layer will have 28 x 28 neurons = 784 neurons firing
     val inputLayerSize = trainReader.getCols * trainReader.getRows
-    val net = new SequentialNeuralNet(inputLayerSize = inputLayerSize, outputLayerSize = 10, alpha=3.0, hiddenLayers = List(30))
+    val net = new SequentialNeuralNet(inputLayerSize = inputLayerSize, outputLayerSize = 10, alpha=2.5, hiddenLayers = List(30))
     val trainXImages = trainReader.getImages
     val trainYLabels = trainReader.getLabelsForML
     val testXImages = testReader.getImages

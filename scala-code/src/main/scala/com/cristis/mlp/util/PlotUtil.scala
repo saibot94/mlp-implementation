@@ -1,6 +1,6 @@
 package com.cristis.mlp.util
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.plot.{Figure, plot}
 
 /**
@@ -46,4 +46,24 @@ object PlotUtil {
     f.saveas(s"$fileName.png")
   }
 
+
+  def plotImages(cols: Int, rows:Int, images: List[Array[Int]], labels: Vector[Int],
+                   fileName: String): Unit = {
+    val f = Figure()
+    import breeze.plot.image
+    var j = 0
+    images.foreach {
+      im =>
+        val pl = DenseMatrix.zeros[Double](rows, cols)
+        for(i <- 0 until rows) {
+          pl(i,::) := DenseVector(im.reverse.slice(i * rows, i * rows + cols).map(_.toDouble)).t
+        }
+        f.subplot(5, 5, j) += image(pl.t)
+        f.subplot(5, 5, j).title = s"Label: ${labels(j)}"
+        j += 1
+    }
+    f.height = 1080
+    f.width = 1920
+    f.saveas(s"$fileName.png")
+  }
 }
