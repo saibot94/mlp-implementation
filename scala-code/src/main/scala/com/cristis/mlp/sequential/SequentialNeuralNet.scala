@@ -5,6 +5,25 @@ import breeze.numerics.pow
 import breeze.stats.distributions.Rand
 import com.cristis.mlp.functions.{sigmoid, sigmoidPrime}
 
+
+object SequentialNeuralNet {
+    def convertYToPredictions(y: DenseMatrix[Double]) :List[Int]= {
+      (0 until y.rows).map { i =>
+        val m = y(i, ::)
+        val maxval = max(m.inner)
+        var j = 0
+        var result = 0
+        m.inner.foreachValue {
+          v =>
+            if(v == maxval) {
+              result = j
+            }
+            j+=1
+        }
+        result
+      }.toList
+    }
+}
 /**
   * Class representing a multilayer perceptron with only 1 hidden layer
   * Created by cristian.schuszter on 6/23/2017.
@@ -35,6 +54,9 @@ class SequentialNeuralNet(inputLayerSize: Int,
     * The applications of the sigmoid functions on each of the z matrices on each hidden layer
     */
   private var activations: Array[DenseMatrix[Double]] = new Array[DenseMatrix[Double]](weights.length)
+  private var accuracies: Array[Double] = new Array[Double](0)
+  def getAccuracyChart: Array[Double] = accuracies
+
   private var yhat: DenseMatrix[Double] = _
 
   private def buildWeightsForHiddenLayerAndOutputs: Array[DenseMatrix[Double]] = {
@@ -49,6 +71,7 @@ class SequentialNeuralNet(inputLayerSize: Int,
     }
     (w ++ Seq(DenseMatrix.rand(hiddenLayers.last, outputLayerSize, Rand.gaussian))).toArray
   }
+
 
   def isRegressionNet: Boolean = outputLayerSize == 1
 
@@ -198,6 +221,8 @@ class SequentialNeuralNet(inputLayerSize: Int,
       if(debug) {
         println(s"Cost is now ${costs.last}")
         println(s"Test cost is now ${testCosts.last}")
+        accuracies :+= this.getAccuracy(testX, testY) * 100
+        println(s"Accuracy on the test set is now: ${this.getAccuracy(testX, testY) * 100}")
       }
       if (newCost <= 0.0001d || newCost == 0) {
         println(s"INFO: NN ran for ${costs.length} steps")
@@ -211,6 +236,18 @@ class SequentialNeuralNet(inputLayerSize: Int,
       oldCost = newCost
     }
     (costs, testCosts)
+  }
+
+  /**
+    * Get the accuracy of predicting a matrix X and comparing it with the expected values
+    * @param x - matrix
+    * @param y - classes which should be "triggered" by the prediction
+    * @return prediction as a double
+    */
+  def getAccuracy(x: DenseMatrix[Double], y: DenseMatrix[Double]): Double = {
+    val actual = this.predict(x).data.map(_.toInt).toList
+    val expected = SequentialNeuralNet.convertYToPredictions(y)
+    expected.zip(actual).count { case (a, b) => a == b }.toDouble / expected.size.toDouble
   }
 
 }

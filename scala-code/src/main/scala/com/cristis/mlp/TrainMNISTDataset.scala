@@ -12,12 +12,12 @@ object TrainMNISTDataset {
     println("==== Reading training images (60k)")
     val trainFile = "C:\\Users\\chris\\Desktop\\mnist\\train-images.idx3-ubyte"
     val trainLabelFile = "C:\\Users\\chris\\Desktop\\mnist\\train-labels.idx1-ubyte"
-    val trainReader = new IdxReader(trainFile, trainLabelFile, limit = Some(20000))
+    val trainReader = new IdxReader(trainFile, trainLabelFile, limit = Some(30000))
 
     println("==== Reading test images (10k)")
     val testFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte"
     val testLabelFile = "C:\\Users\\chris\\Desktop\\mnist\\t10k-labels.idx1-ubyte"
-    val testReader = new IdxReader(testFile, testLabelFile, limit = Some(2000))
+    val testReader = new IdxReader(testFile, testLabelFile, limit = Some(5000))
 
 
     println("==== Successfully read all images, starting training of network...")
@@ -41,39 +41,8 @@ object TrainMNISTDataset {
 
     val (costs, testCosts) = net.train(trainX, trainY, testX, testY, its = 30, debug = true, miniBatchSize = 10)
 
-    val actual = net.predict(testX).data.map(_.toInt).toList
-    val actualTrain = net.predict(trainX).data.map(_.toInt).toList
-
-    val expected = (0 until testY.rows).map { i =>
-      val m = testY(i, ::)
-      val maxval = max(m.inner)
-      var j = 0
-      var result = 0
-      m.inner.foreachValue {
-        v =>
-          if(v == maxval) {
-            result = j
-          }
-          j+=1
-      }
-      result
-    }.toList
-
-    val expectedTrain = (0 until trainY.rows).map { i =>
-      val m = trainY(i, ::)
-      val maxval = max(m.inner)
-      var j = 0
-      var result = 0
-      m.inner.foreachValue {
-        v =>
-          if(v == maxval) {
-            result = j
-          }
-          j+=1
-      }
-      result
-    }.toList
-
+    val actual = net.predict(validateX).data.map(_.toInt).toList
+    val expected = SequentialNeuralNet.convertYToPredictions(validateY)
 
     println("testx: ")
     println(actual)
@@ -81,11 +50,9 @@ object TrainMNISTDataset {
     println("testy: ")
     println(expected)
 
-
-    val accuracyTrain = expectedTrain.zip(actualTrain).count { case (a, b) => a == b }.toDouble / actualTrain.size.toDouble
-    val accuracy = expected.zip(actual).count { case (a, b) => a == b }.toDouble / expected.size.toDouble
-    println(s"Final accuracy on train dataset: ${accuracyTrain * 100}% ; after 30 iterations")
-    println(s"Final accuracy on test dataset: ${accuracy * 100}% ; after 30 iterations")
+    println(s"Final accuracy on train dataset: ${net.getAccuracy(trainX, trainY) * 100}% ; after 30 iterations")
+    println(s"Final accuracy on test dataset: ${net.getAccuracy(testX, testY) * 100}% ; after 30 iterations")
     PlotUtil.plotNeuralNetworkOutput(costs, testCosts, "mnist_full")
+    PlotUtil.plotAccuracy(net.getAccuracyChart, "mnist_full_accuracy")
   }
 }
